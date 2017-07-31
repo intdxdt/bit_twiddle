@@ -1,10 +1,6 @@
 /**
  * Bit twiddling hacks for Rust.
- *
- * Author: Titus Tienaah
- * @after Mikola Lysenko
- * Port of js-version here : https://github.com/mikolalysenko/bit-twiddle
- * Ported from Stanford bit twiddling hack library:
+ * Based on Stanford bit twiddling hack library:
  *    http://graphics.stanford.edu/~seander/bithacks.html
  */
 
@@ -46,26 +42,43 @@ pub fn is_pow2(v: i32) -> bool {
 
 ///Computes log base 2 of v
 pub fn log2(v: u32) -> u32 {
-    let mut v:u32 = v;
-    let mut r:u32;
-    let mut shift:u32;
-    r =     ((v > 0xFFFF) as u32)<< 4; v >>= r;
-    shift = ((v > 0xFF) as u32)  << 3; v >>= shift;r |= shift;
-    shift = ((v > 0xF)  as u32)  << 2; v >>= shift;r |= shift;
-    shift = ((v > 0x3)  as u32)  << 1; v >>= shift;r |= shift;
+    let mut v: u32 = v;
+    let mut r: u32;
+    let mut shift: u32;
+    r     = ((v > 0xFFFF) as u32)<< 4;v >>= r;
+    shift = ((v > 0xFF) as u32)  << 3;v >>= shift;r |= shift;
+    shift = ((v > 0xF) as u32)   << 2;v >>= shift;r |= shift;
+    shift = ((v > 0x3) as u32)   << 1;v >>= shift;r |= shift;
     r | (v >> 1)
 }
 
 ///Computes log base 10 of v
 pub fn log10(v: i32) -> i32 {
-    if v >= 1000000000 { 9 } else if v >= 100000000 { 8 } else if v >= 10000000 { 7 } else if v >= 1000000 { 6 } else if v >= 100000 { 5 } else if v >= 10000 { 4 } else if v >= 1000 { 3 } else if v >= 100 { 2 } else if v >= 10 { 1 } else { 0 }
+    if v >= 1000000000 { 9 }
+    else if v >= 100000000 { 8 }
+    else if v >= 10000000 { 7 }
+    else if v >= 1000000 { 6 }
+    else if v >= 100000 { 5 }
+    else if v >= 10000 { 4 }
+    else if v >= 1000 { 3 }
+    else if v >= 100 { 2 }
+    else if v >= 10 { 1 } else { 0 }
 }
 
 ///Counts number of bits
-pub fn pop_count(v: i32) -> i32 {
-    let mut v = v - ((v >> 1) & 0x55555555);
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-    ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24
+pub fn pop_count(v: u32) -> u32 {
+    //    let mut v = v - ((v >> 1) & 0x55555555);
+    //    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+    //    ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24 //i32 & u32 cause overflow on this line
+    let mut c;
+    let (s0, s1, s2, s3, s4) = (1, 2, 4, 8, 16); // Magic Binary Numbers
+    let (b0, b1, b2, b3, b4) = (0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF);
+
+    c = v - ((v >> s0) & b0);
+    c = ((c >> s1) & b1) + (c & b1);
+    c = ((c >> s2) + c) & b2;
+    c = ((c >> s3) + c) & b3;
+    ((c >> s4) + c) & b4
 }
 
 ///Counts number of trailing zeros
@@ -142,8 +155,8 @@ pub fn reverse(v: i32) -> i32 {
         REVERSE_TABLE[((v >> 24) & 0xff) as usize]
 }
 
-///Interleave bits of 2 coordinates with 16 bits.  Useful for fast quadtree codes
-pub fn interleave2(x: i32, y: i32) -> i32 {
+///Interleave bits of 2 coordinates with 16   Useful for fast quadtree codes
+pub fn interleave2(x: u32, y: u32) -> u32 {
     let mut x = x;
     let mut y = y;
     x &= 0xFFFF;
@@ -173,7 +186,7 @@ pub fn deinterleave2(v: u32, n: u32) -> u32 {
 }
 
 
-///Interleave bits of 3 coordinates, each with 10 bits.  Useful for fast octree codes
+///Interleave bits of 3 coordinates, each with 10   Useful for fast octree codes
 pub fn interleave3(x: u32, y: u32, z: u32) -> u32 {
     let mut x = x;
     let mut y = y;
@@ -220,9 +233,172 @@ pub fn next_combination(v: i32) -> i32 {
 
 #[cfg(test)]
 mod bit_twiddle_test {
-    use super::not;
+    use super::*;
+
     #[test]
-    fn test_bit_twiddle() {
+    fn test_not() {
         assert_eq!(not(170), -171);
+        assert_eq!(not(0), -1);
+        assert_eq!(not(-3), 2);
+    }
+
+    #[test]
+    fn test_sign() {
+        assert_eq!(sign(-100), -1);
+        assert_eq!(sign(100), 1);
+        assert_eq!(sign(0), 0);
+        assert_eq!(sign(INT_MAX), 1);
+        assert_eq!(sign(INT_MIN), -1);
+    }
+
+    #[test]
+    fn test_abs() {
+        assert_eq!(abs(0), 0);
+        assert_eq!(abs(1), 1);
+        assert_eq!(abs(-1), 1);
+        assert_eq!(abs(INT_MAX), INT_MAX);
+        assert_eq!(abs(-INT_MAX), INT_MAX);
+        //abs(-INT_MIN) -- overflow
+    }
+
+    #[test]
+    fn test_min() {
+        assert_eq!(min(0, 0), 0);
+        assert_eq!(min(-1, 1), -1);
+        assert_eq!(min(INT_MAX, INT_MAX), INT_MAX);
+        assert_eq!(min(INT_MIN, INT_MIN), INT_MIN);
+        assert_eq!(min(INT_MAX, INT_MIN), INT_MIN);
+    }
+
+    #[test]
+    fn test_max() {
+        assert_eq!(max(0, 0), 0);
+        assert_eq!(max(-1, 1), 1);
+        assert_eq!(max(INT_MAX, INT_MAX), INT_MAX);
+        assert_eq!(max(INT_MIN, INT_MIN), INT_MIN);
+        assert_eq!(max(INT_MAX, INT_MIN), INT_MAX);
+    }
+
+    #[test]
+    fn test_is_pow2() {
+        assert!(!is_pow2(0));
+        for i in 0..31 {
+            assert!(is_pow2((1 << i)));
+        }
+        assert!(!is_pow2(100));
+        assert!(!is_pow2(0x7fffffff));
+        assert!(!is_pow2(-1000000));
+    }
+}
+
+#[test]
+fn test_log2() {
+    for i in 0..31 {
+        if i > 0 {
+            assert_eq!(log2((1 << i) - 1), i - 1);
+            assert_eq!(log2((1 << i) + 1), i);
+        }
+        assert_eq!(log2((1 << i)), i);
+    }
+}
+
+#[test]
+fn test_pop_count() {
+    assert_eq!(pop_count(0), 0);
+    assert_eq!(pop_count(1), 1);
+    //assert_eq!(pop_count(-1), 32);
+    for i in 0..31 {
+        assert_eq!(pop_count(1 << i), 1);
+        assert_eq!(pop_count((1 << i) - 1), i);
+    }
+    assert_eq!(pop_count(0xf0f00f0f), 16); //overflow for i32
+}
+
+#[test]
+fn test_count_trailing_zeros() {
+    assert_eq!(count_trailing_zeros(0), 32);
+    assert_eq!(count_trailing_zeros(1), 0);
+    assert_eq!(count_trailing_zeros(-1), 0);
+    for i in 0..31 {
+        assert_eq!(count_trailing_zeros(1 << i), i);
+        if i > 0 {
+            assert_eq!(count_trailing_zeros((1 << i) - 1), 0)
+        }
+    }
+    assert_eq!(count_trailing_zeros(0xf81700), 8);
+}
+
+#[test]
+fn test_next_pow2() {
+    for i in 0..31 {
+        if i != 1 {
+            assert_eq!(next_pow2((1 << i) - 1), 1 << i);
+        }
+        assert_eq!(next_pow2((1 << i)), 1 << i);
+        if i < 30 {
+            assert_eq!(next_pow2((1 << i) + 1), 1 << (i + 1));
+        }
+    }
+}
+
+#[test]
+fn test_prev_pow2() {
+    println!("{i:>2}    {input:>w$}    {prev:>w$}", i="i", input="((1 << i) + 1)", prev="prev_pow2", w=10);
+    println!("{}", "-".repeat(34));
+    for i in 0..31 {
+        if i > 0 {
+            assert_eq!(prev_pow2((1 << i) - 1), 1 << (i - 1));
+        }
+        assert_eq!(prev_pow2((1 << i)), 1 << i);
+
+        if 0 < i && i < 30 {
+            println!("{i:>2} .. {input:>w$} .. {prev:>w$}", i=i, input=((1 << i) + 1), prev=prev_pow2((1 << i) + 1), w=10);
+            assert_eq!(prev_pow2((1 << i) + 1), 1 << i);
+        }
+    }
+}
+
+#[test]
+fn test_parity() {
+    assert_eq!(parity(1), 1);
+    assert_eq!(parity(0), 0);
+    assert_eq!(parity(0xf), 0);
+    assert_eq!(parity(0x10f), 1);
+}
+
+#[test]
+fn test_reverse() {
+    assert_eq!(reverse(0), 0);
+    assert_eq!(reverse(-1), -1);
+}
+
+#[test]
+fn test_next_combination() {
+    assert_eq!(next_combination(1), 2);
+    assert_eq!(next_combination(0x300), 0x401);
+}
+
+#[test]
+fn test_interleave2() {
+    for x in 0..100 {
+        for y in 0..100 {
+            let h = interleave2(x, y);
+            assert_eq!(deinterleave2(h, 0), x);
+            assert_eq!(deinterleave2(h, 1), y);
+        }
+    }
+}
+
+#[test]
+fn test_interleave3() {
+    for x in 0..(25 + 1) {
+        for y in 0..(25 + 1) {
+            for z in 0..(25 + 1) {
+                let h = interleave3(x, y, z);
+                assert_eq!(deinterleave3(h, 0), x);
+                assert_eq!(deinterleave3(h, 1), y);
+                assert_eq!(deinterleave3(h, 2), z);
+            }
+        }
     }
 }
