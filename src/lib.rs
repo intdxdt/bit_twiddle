@@ -109,12 +109,14 @@ pub fn pop_count(v: u32) -> u32 {
     ((c >> s4) + c) & b4
 }
 
-///Counts number of trailing zeros
+//finding the log base 2 in parallel
+//first isolate the lowest 1 bit, and then
+// proceed with c starting at the maximum and decreasing
 //pub fn count_trailing_zeros(v: u32) -> u32 {
 //    let mut v = v;
 //    let mut c = 32u32;
 //    let sv = v as i32;
-//    v = (sv & -sv) as u32;
+//    v = (sv & -sv) as u32; //NOTE: may overflow u32 -> -i32
 //    if v != 0 { c -= 1 };
 //    if v & 0x0000FFFF != 0 { c -= 16 };
 //    if v & 0x00FF00FF != 0 { c -= 8 };
@@ -123,7 +125,8 @@ pub fn pop_count(v: u32) -> u32 {
 //    if v & 0x55555555 != 0 { c -= 1 };
 //    c
 //}
-
+///Computes the number of trailing zeros by accumulating c
+/// in a manner akin to binary search
 pub fn count_trailing_zeros(v: u32) -> u32 {
     let mut v = v;
     let mut c = 32u32;
