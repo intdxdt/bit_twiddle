@@ -73,23 +73,29 @@ pub fn log2(v: u32) -> u32 {
     let mut v: u32 = v;
     let mut r: u32;
     let mut shift: u32;
-    r = bu32(v > 0xFFFF) << 4;
-    v >>= r;
-    shift = bu32(v > 0xFF) << 3;
-    v >>= shift;
-    r |= shift;
-    shift = bu32(v > 0xF) << 2;
-    v >>= shift;
-    r |= shift;
-    shift = bu32(v > 0x3) << 1;
-    v >>= shift;
-    r |= shift;
+    //@formatter:off
+    r     = bu32(v > 0xFFFF) << 4; v >>= r;
+    shift = bu32(v > 0xFF)   << 3; v >>= shift; r |= shift;
+    shift = bu32(v > 0xF)    << 2; v >>= shift; r |= shift;
+    shift = bu32(v > 0x3)    << 1; v >>= shift; r |= shift;
     r | (v >> 1)
+    //@formatter:on
 }
 
 ///Computes log base 10 of v
 pub fn log10(v: i32) -> i32 {
-    if v >= 1000000000 { 9 } else if v >= 100000000 { 8 } else if v >= 10000000 { 7 } else if v >= 1000000 { 6 } else if v >= 100000 { 5 } else if v >= 10000 { 4 } else if v >= 1000 { 3 } else if v >= 100 { 2 } else if v >= 10 { 1 } else { 0 }
+    //@formatter:off
+    if v >= 1000000000 { 9 }
+    else if v >= 100000000 { 8 }
+    else if v >= 10000000 { 7 }
+    else if v >= 1000000 { 6 }
+    else if v >= 100000 { 5 }
+    else if v >= 10000 { 4 }
+    else if v >= 1000 { 3 }
+    else if v >= 100 { 2 }
+    else if v >= 10 { 1 }
+    else { 0 }
+    //@formatter:on
 }
 
 ///Counts number of bits
@@ -212,13 +218,16 @@ pub fn parity(v: i32) -> i32 {
 
 ///Reverse bits in a 32 bit word
 pub fn reverse(v: u32) -> u32 {
-    (REVERSE_TABLE[usz((v & 0xff))] << 24) |
-        (REVERSE_TABLE[usz((v >> 8) & 0xff)] << 16) |
-        (REVERSE_TABLE[usz((v >> 16) & 0xff)] << 8) |
-        REVERSE_TABLE[usz((v >> 24) & 0xff)]
+    //@formatter:off
+    (REVERSE_TABLE[usz((v        & 0xff))]  << 24) |
+    (REVERSE_TABLE[usz((v >>  8) & 0xff) ]  << 16) |
+    (REVERSE_TABLE[usz((v >> 16) & 0xff) ]  <<  8) |
+     REVERSE_TABLE[usz((v >> 24) & 0xff) ]
+    //@formatter:on
 }
 
-///Interleave bits of 2 coordinates with 16   Useful for fast quadtree codes
+///Interleave bits of 2 coordinates with 16
+/// Useful for fast quadtree codes
 pub fn interleave2(x: u32, y: u32) -> u32 {
     let mut x = x;
     let mut y = y;
@@ -239,17 +248,20 @@ pub fn interleave2(x: u32, y: u32) -> u32 {
 
 ///Extracts the nth interleaved component
 pub fn deinterleave2(v: u32, n: u32) -> u32 {
+    //@formatter:off
     let mut v = v;
-    v = (v >> n) & 0x55555555;
-    v = (v | (v >> 1)) & 0x33333333;
-    v = (v | (v >> 2)) & 0x0F0F0F0F;
-    v = (v | (v >> 4)) & 0x00FF00FF;
-    v = (v | (v >> 16)) & 0x000FFFF;
+    v =      (v >>  n)   & 0x55555555;
+    v = (v | (v >>  1))  & 0x33333333;
+    v = (v | (v >>  2))  & 0x0F0F0F0F;
+    v = (v | (v >>  4))  & 0x00FF00FF;
+    v = (v | (v >> 16))  & 0x000FFFF;
     (v << 16) >> 16
+    //@formatter:on
 }
 
 
-///Interleave bits of 3 coordinates, each with 10   Useful for fast octree codes
+///Interleave bits of 3 coordinates, each with 10
+/// Useful for fast octree codes
 pub fn interleave3(x: u32, y: u32, z: u32) -> u32 {
     let mut x = x;
     let mut y = y;
