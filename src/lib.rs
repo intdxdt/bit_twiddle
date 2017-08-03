@@ -4,9 +4,9 @@
  *    http://graphics.stanford.edu/~seander/bithacks.html
  */
 
-pub const INT_BITS: i32  = 32;//number of bits in an integer
-pub const INT_MAX:  i32  = 0x7fffffff;
-pub const INT_MIN:  i32  = -1 << (INT_BITS - 1);
+pub const INT_BITS: i32 = 32;//number of bits in an integer
+pub const INT_MAX: i32 = 0x7fffffff;
+pub const INT_MIN: i32 = -1 << (INT_BITS - 1);
 pub const REVERSE_TABLE: [u32; 256] = [0, 128, 64, 192, 32, 160, 96, 224, 16, 144, 80, 208, 48,
     176, 112, 240, 8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248, 4,
     132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244, 12, 140, 76, 204, 44,
@@ -41,7 +41,7 @@ pub fn usz(v: u32) -> usize { v as usize }
 ///Returns -1, 0, +1 depending on sign of x
 #[inline]
 pub fn sign(v: i32) -> i32 {
-    bi32(v > 0)  - bi32(v < 0)
+    bi32(v > 0) - bi32(v < 0)
 }
 
 ///Computes absolute value of integer
@@ -73,25 +73,23 @@ pub fn log2(v: u32) -> u32 {
     let mut v: u32 = v;
     let mut r: u32;
     let mut shift: u32;
-    r     = bu32(v > 0xFFFF)<< 4;v >>= r;
-    shift = bu32(v > 0xFF)  << 3;v >>= shift;r |= shift;
-    shift = bu32(v > 0xF)   << 2;v >>= shift;r |= shift;
-    shift = bu32(v > 0x3)   << 1;v >>= shift;r |= shift;
+    r = bu32(v > 0xFFFF) << 4;
+    v >>= r;
+    shift = bu32(v > 0xFF) << 3;
+    v >>= shift;
+    r |= shift;
+    shift = bu32(v > 0xF) << 2;
+    v >>= shift;
+    r |= shift;
+    shift = bu32(v > 0x3) << 1;
+    v >>= shift;
+    r |= shift;
     r | (v >> 1)
 }
 
 ///Computes log base 10 of v
 pub fn log10(v: i32) -> i32 {
-    if      v >= 1000000000 { 9 }
-    else if v >= 100000000 { 8 }
-    else if v >= 10000000 { 7 }
-    else if v >= 1000000 { 6 }
-    else if v >= 100000 { 5 }
-    else if v >= 10000 { 4 }
-    else if v >= 1000 { 3 }
-    else if v >= 100 { 2 }
-    else if v >= 10 { 1 }
-    else { 0 }
+    if v >= 1000000000 { 9 } else if v >= 100000000 { 8 } else if v >= 10000000 { 7 } else if v >= 1000000 { 6 } else if v >= 100000 { 5 } else if v >= 10000 { 4 } else if v >= 1000 { 3 } else if v >= 100 { 2 } else if v >= 10 { 1 } else { 0 }
 }
 
 ///Counts number of bits
@@ -112,17 +110,48 @@ pub fn pop_count(v: u32) -> u32 {
 }
 
 ///Counts number of trailing zeros
+//pub fn count_trailing_zeros(v: u32) -> u32 {
+//    let mut v = v;
+//    let mut c = 32u32;
+//    let sv = v as i32;
+//    v = (sv & -sv) as u32;
+//    if v != 0 { c -= 1 };
+//    if v & 0x0000FFFF != 0 { c -= 16 };
+//    if v & 0x00FF00FF != 0 { c -= 8 };
+//    if v & 0x0F0F0F0F != 0 { c -= 4 };
+//    if v & 0x33333333 != 0 { c -= 2 };
+//    if v & 0x55555555 != 0 { c -= 1 };
+//    c
+//}
+
 pub fn count_trailing_zeros(v: u32) -> u32 {
     let mut v = v;
     let mut c = 32u32;
-    let sv = v as i32;
-    v = (sv & -sv) as u32;
-    if v != 0 { c -= 1 };
-    if v & 0x0000FFFF != 0 { c -= 16 };
-    if v & 0x00FF00FF != 0 { c -= 8 };
-    if v & 0x0F0F0F0F != 0 { c -= 4 };
-    if v & 0x33333333 != 0 { c -= 2 };
-    if v & 0x55555555 != 0 { c -= 1 };
+    // NOTE: if 0 == v, then c = 31.
+    //short circuit v == 0 as 32
+    if v == 0 { return c; }
+    if v & 0x1 != 0 {
+        c = 0;// special case for odd v (assumed to happen half of the time)
+    } else {
+        c = 1;
+        if (v & 0xffff) == 0 {
+            v >>= 16;
+            c += 16;
+        }
+        if (v & 0xff) == 0 {
+            v >>= 8;
+            c += 8;
+        }
+        if (v & 0xf) == 0 {
+            v >>= 4;
+            c += 4;
+        }
+        if (v & 0x3) == 0 {
+            v >>= 2;
+            c += 2;
+        }
+        c -= v & 0x1;
+    }
     c
 }
 
@@ -180,10 +209,10 @@ pub fn parity(v: i32) -> i32 {
 
 ///Reverse bits in a 32 bit word
 pub fn reverse(v: u32) -> u32 {
-        (REVERSE_TABLE[usz((v & 0xff))]       << 24)|
-        (REVERSE_TABLE[usz((v >> 8) & 0xff)]  << 16)|
+    (REVERSE_TABLE[usz((v & 0xff))] << 24) |
+        (REVERSE_TABLE[usz((v >> 8) & 0xff)] << 16) |
         (REVERSE_TABLE[usz((v >> 16) & 0xff)] << 8) |
-         REVERSE_TABLE[usz((v >> 24) & 0xff)]
+        REVERSE_TABLE[usz((v >> 24) & 0xff)]
 }
 
 ///Interleave bits of 2 coordinates with 16   Useful for fast quadtree codes
@@ -230,16 +259,16 @@ pub fn interleave3(x: u32, y: u32, z: u32) -> u32 {
 
     y &= 0x3FF;
     y = (y | (y << 16)) & 4278190335;
-    y = (y | (y <<  8)) & 251719695;
-    y = (y | (y <<  4)) & 3272356035;
-    y = (y | (y <<  2)) & 1227133513;
+    y = (y | (y << 8)) & 251719695;
+    y = (y | (y << 4)) & 3272356035;
+    y = (y | (y << 2)) & 1227133513;
     x |= y << 1;
 
     z &= 0x3FF;
     z = (z | (z << 16)) & 4278190335;
-    z = (z | (z <<  8)) & 251719695;
-    z = (z | (z <<  4)) & 3272356035;
-    z = (z | (z <<  2)) & 1227133513;
+    z = (z | (z << 8)) & 251719695;
+    z = (z | (z << 4)) & 3272356035;
+    z = (z | (z << 2)) & 1227133513;
 
     x | (z << 2)
 }
@@ -248,9 +277,9 @@ pub fn interleave3(x: u32, y: u32, z: u32) -> u32 {
 pub fn deinterleave3(v: u32, n: u32) -> u32 {
     let mut v = v;
     v = (v >> n) & 1227133513;
-    v = (v | (v >>  2)) & 3272356035;
-    v = (v | (v >>  4)) & 251719695;
-    v = (v | (v >>  8)) & 4278190335;
+    v = (v | (v >> 2)) & 3272356035;
+    v = (v | (v >> 4)) & 251719695;
+    v = (v | (v >> 8)) & 4278190335;
     v = (v | (v >> 16)) & 0x3FF;
     (v << 22) >> 22
 }
@@ -260,7 +289,7 @@ pub fn deinterleave3(v: u32, n: u32) -> u32 {
 pub fn next_combination(v: u32) -> u32 {
     let t = v | (v - 1);
     let c = (not(t as i32) & -not(t as i32)) as u32 - 1;
-    (t + 1) | ( c >> (count_trailing_zeros(v) + 1))
+    (t + 1) | (c >> (count_trailing_zeros(v) + 1))
 }
 
 #[cfg(test)]
