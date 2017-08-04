@@ -379,6 +379,21 @@ fn test_log2() {
 }
 
 #[test]
+fn test_log10() {
+			assert_eq!(log10(1) , 0);
+			assert_eq!(log10(10) , 1);
+			assert_eq!(log10(100) , 2);
+			assert_eq!(log10(1000) , 3);
+			assert_eq!(log10(10000) , 4);
+			assert_eq!(log10(100000) , 5);
+			assert_eq!(log10(1234007) , 6);
+			assert_eq!(log10(10004659) , 7);
+			assert_eq!(log10(100046598) , 8);
+			assert_eq!(log10(1000465983) , 9);
+
+}
+
+#[test]
 fn test_pop_count() {
     assert_eq!(pop_count(0), 0);
     assert_eq!(pop_count(1), 1);
