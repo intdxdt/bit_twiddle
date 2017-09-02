@@ -74,10 +74,17 @@ pub fn log2(v: u32) -> u32 {
     let mut r: u32;
     let mut shift: u32;
     //@formatter:off
-    r     = bu32(v > 0xFFFF) << 4; v >>= r;
-    shift = bu32(v > 0xFF)   << 3; v >>= shift; r |= shift;
-    shift = bu32(v > 0xF)    << 2; v >>= shift; r |= shift;
-    shift = bu32(v > 0x3)    << 1; v >>= shift; r |= shift;
+    r = bu32(v > 0xFFFF) << 4;
+    v >>= r;
+    shift = bu32(v > 0xFF) << 3;
+    v >>= shift;
+    r |= shift;
+    shift = bu32(v > 0xF) << 2;
+    v >>= shift;
+    r |= shift;
+    shift = bu32(v > 0x3) << 1;
+    v >>= shift;
+    r |= shift;
     r | (v >> 1)
     //@formatter:on
 }
@@ -85,16 +92,7 @@ pub fn log2(v: u32) -> u32 {
 ///Computes log base 10 of v
 pub fn log10(v: i32) -> i32 {
     //@formatter:off
-    if v >= 1000000000 { 9 }
-    else if v >= 100000000 { 8 }
-    else if v >= 10000000 { 7 }
-    else if v >= 1000000 { 6 }
-    else if v >= 100000 { 5 }
-    else if v >= 10000 { 4 }
-    else if v >= 1000 { 3 }
-    else if v >= 100 { 2 }
-    else if v >= 10 { 1 }
-    else { 0 }
+    if v >= 1000000000 { 9 } else if v >= 100000000 { 8 } else if v >= 10000000 { 7 } else if v >= 1000000 { 6 } else if v >= 100000 { 5 } else if v >= 10000 { 4 } else if v >= 1000 { 3 } else if v >= 100 { 2 } else if v >= 10 { 1 } else { 0 }
     //@formatter:on
 }
 
@@ -219,10 +217,10 @@ pub fn parity(v: i32) -> i32 {
 ///Reverse bits in a 32 bit word
 pub fn reverse(v: u32) -> u32 {
     //@formatter:off
-    (REVERSE_TABLE[usz((v        & 0xff))]  << 24) |
-    (REVERSE_TABLE[usz((v >>  8) & 0xff) ]  << 16) |
-    (REVERSE_TABLE[usz((v >> 16) & 0xff) ]  <<  8) |
-     REVERSE_TABLE[usz((v >> 24) & 0xff) ]
+    (REVERSE_TABLE[usz((v & 0xff))] << 24) |
+        (REVERSE_TABLE[usz((v >> 8) & 0xff)] << 16) |
+        (REVERSE_TABLE[usz((v >> 16) & 0xff)] << 8) |
+        REVERSE_TABLE[usz((v >> 24) & 0xff)]
     //@formatter:on
 }
 
@@ -250,11 +248,11 @@ pub fn interleave2(x: u32, y: u32) -> u32 {
 pub fn deinterleave2(v: u32, n: u32) -> u32 {
     //@formatter:off
     let mut v = v;
-    v =      (v >>  n)   & 0x55555555;
-    v = (v | (v >>  1))  & 0x33333333;
-    v = (v | (v >>  2))  & 0x0F0F0F0F;
-    v = (v | (v >>  4))  & 0x00FF00FF;
-    v = (v | (v >> 16))  & 0x000FFFF;
+    v = (v >> n) & 0x55555555;
+    v = (v | (v >> 1)) & 0x33333333;
+    v = (v | (v >> 2)) & 0x0F0F0F0F;
+    v = (v | (v >> 4)) & 0x00FF00FF;
+    v = (v | (v >> 16)) & 0x000FFFF;
     (v << 16) >> 16
     //@formatter:on
 }
@@ -365,131 +363,134 @@ mod bit_twiddle_test {
         assert!(!is_pow2(0x7fffffff));
         assert!(!is_pow2(-1000000));
     }
-}
 
-#[test]
-fn test_log2() {
-    for i in 0..31 {
-        if i > 0 {
-            assert_eq!(log2((1 << i) - 1), i - 1);
-            assert_eq!(log2((1 << i) + 1), i);
-        }
-        assert_eq!(log2((1 << i)), i);
-    }
-}
 
-#[test]
-fn test_log10() {
-			assert_eq!(log10(1) , 0);
-			assert_eq!(log10(10) , 1);
-			assert_eq!(log10(100) , 2);
-			assert_eq!(log10(1000) , 3);
-			assert_eq!(log10(10000) , 4);
-			assert_eq!(log10(100000) , 5);
-			assert_eq!(log10(1234007) , 6);
-			assert_eq!(log10(10004659) , 7);
-			assert_eq!(log10(100046598) , 8);
-			assert_eq!(log10(1000465983) , 9);
-
-}
-
-#[test]
-fn test_pop_count() {
-    assert_eq!(pop_count(0), 0);
-    assert_eq!(pop_count(1), 1);
-    //assert_eq!(pop_count(-1), 32);
-    for i in 0..31 {
-        assert_eq!(pop_count(1 << i), 1);
-        assert_eq!(pop_count((1 << i) - 1), i);
-    }
-    assert_eq!(pop_count(0xf0f00f0f), 16); //overflow for i32
-}
-
-#[test]
-fn test_count_trailing_zeros() {
-    assert_eq!(count_trailing_zeros(0), 32);
-    assert_eq!(count_trailing_zeros(1), 0);
-    //    assert_eq!(count_trailing_zeros(-1), 0);
-    for i in 0..31 {
-        assert_eq!(count_trailing_zeros(1 << i), i);
-        if i > 0 {
-            assert_eq!(count_trailing_zeros((1 << i) - 1), 0)
+    #[test]
+    fn test_log2() {
+        for i in 0..31 {
+            if i > 0 {
+                assert_eq!(log2((1 << i) - 1), i - 1);
+                assert_eq!(log2((1 << i) + 1), i);
+            }
+            assert_eq!(log2((1 << i)), i);
         }
     }
-    assert_eq!(count_trailing_zeros(0xf81700), 8);
-}
 
-#[test]
-fn test_next_pow2() {
-    for i in 0..31 {
-        if i != 1 {
-            assert_eq!(next_pow2((1 << i) - 1), 1 << i);
+    #[test]
+    fn test_log10() {
+        assert_eq!(log10(1), 0);
+        assert_eq!(log10(10), 1);
+        assert_eq!(log10(100), 2);
+        assert_eq!(log10(1000), 3);
+        assert_eq!(log10(10000), 4);
+        assert_eq!(log10(100000), 5);
+        assert_eq!(log10(1234007), 6);
+        assert_eq!(log10(10004659), 7);
+        assert_eq!(log10(100046598), 8);
+        assert_eq!(log10(1000465983), 9);
+    }
+
+    #[test]
+    fn test_pop_count() {
+        assert_eq!(pop_count(0), 0);
+        assert_eq!(pop_count(1), 1);
+        //assert_eq!(pop_count(-1), 32);
+        for i in 0..31 {
+            assert_eq!(pop_count(1 << i), 1);
+            assert_eq!(pop_count((1 << i) - 1), i);
         }
-        assert_eq!(next_pow2((1 << i)), 1 << i);
-        if i < 30 {
-            assert_eq!(next_pow2((1 << i) + 1), 1 << (i + 1));
+        assert_eq!(pop_count(0xf0f00f0f), 16); //overflow for i32
+    }
+
+    #[test]
+    fn test_count_trailing_zeros() {
+        assert_eq!(count_trailing_zeros(0), 32);
+        assert_eq!(count_trailing_zeros(1), 0);
+        //    assert_eq!(count_trailing_zeros(-1), 0);
+        for i in 0..31 {
+            assert_eq!(count_trailing_zeros(1 << i), i);
+            if i > 0 {
+                assert_eq!(count_trailing_zeros((1 << i) - 1), 0)
+            }
+        }
+        assert_eq!(count_trailing_zeros(0xf81700), 8);
+    }
+
+    #[test]
+    fn test_next_pow2() {
+        for i in 0..31 {
+            if i != 1 {
+                assert_eq!(next_pow2((1 << i) - 1), 1 << i);
+            }
+            assert_eq!(next_pow2((1 << i)), 1 << i);
+            if i < 30 {
+                assert_eq!(next_pow2((1 << i) + 1), 1 << (i + 1));
+            }
         }
     }
-}
 
-#[test]
-fn test_prev_pow2() {
-    println!("{i:>2}    {input:>w$}    {prev:>w$}", i = "i", input = "((1 << i) + 1)", prev = "prev_pow2", w = 10);
-    println!("{}", "-".repeat(34));
-    for i in 0..31 {
-        if i > 0 {
-            assert_eq!(prev_pow2((1 << i) - 1), 1 << (i - 1));
-        }
-        assert_eq!(prev_pow2((1 << i)), 1 << i);
+    #[test]
+    fn test_prev_pow2() {
+        println!("{i:>2}    {input:>w$}    {prev:>w$}", i = "i", input = "((1 << i) + 1)", prev = "prev_pow2", w = 10);
+        println!("{}", "-".repeat(34));
+        for i in 0..31 {
+            if i > 0 {
+                assert_eq!(prev_pow2((1 << i) - 1), 1 << (i - 1));
+            }
+            assert_eq!(prev_pow2((1 << i)), 1 << i);
 
-        if 0 < i && i < 30 {
-            println!("{i:>2} .. {input:>w$} .. {prev:>w$}", i = i, input = ((1 << i) + 1), prev = prev_pow2((1 << i) + 1), w = 10);
-            assert_eq!(prev_pow2((1 << i) + 1), 1 << i);
-        }
-    }
-}
-
-#[test]
-fn test_parity() {
-    assert_eq!(parity(1), 1);
-    assert_eq!(parity(0), 0);
-    assert_eq!(parity(0xf), 0);
-    assert_eq!(parity(0x10f), 1);
-}
-
-#[test]
-fn test_reverse() {
-    assert_eq!(reverse(0), 0);
-    //    assert_eq!(reverse(-1), -1);
-}
-
-#[test]
-fn test_next_combination() {
-    assert_eq!(next_combination(1), 2);
-    assert_eq!(next_combination(0x300), 0x401);
-}
-
-#[test]
-fn test_interleave2() {
-    for x in 0..100 {
-        for y in 0..100 {
-            let h = interleave2(x, y);
-            assert_eq!(deinterleave2(h, 0), x);
-            assert_eq!(deinterleave2(h, 1), y);
+            if 0 < i && i < 30 {
+                println!("{i:>2} .. {input:>w$} .. {prev:>w$}", i = i, input = ((1 << i) + 1), prev = prev_pow2((1 << i) + 1), w = 10);
+                assert_eq!(prev_pow2((1 << i) + 1), 1 << i);
+            }
         }
     }
-}
 
-#[test]
-fn test_interleave3() {
-    for x in 0..(25 + 1) {
-        for y in 0..(25 + 1) {
-            for z in 0..(25 + 1) {
-                let h = interleave3(x, y, z);
-                assert_eq!(deinterleave3(h, 0), x);
-                assert_eq!(deinterleave3(h, 1), y);
-                assert_eq!(deinterleave3(h, 2), z);
+    #[test]
+    fn test_parity() {
+        assert_eq!(parity(1), 1);
+        assert_eq!(parity(0), 0);
+        assert_eq!(parity(0xf), 0);
+        assert_eq!(parity(0x10f), 1);
+    }
+
+    #[test]
+    fn test_reverse() {
+        assert_eq!(reverse(0), 0);
+        //    assert_eq!(reverse(-1), -1);
+    }
+
+    #[test]
+    fn test_next_combination() {
+        assert_eq!(next_combination(1), 2);
+        assert_eq!(next_combination(0x300), 0x401);
+    }
+
+    #[test]
+    fn test_interleave2() {
+        for x in 0..100 {
+            for y in 0..100 {
+                let h = interleave2(x, y);
+                assert_eq!(deinterleave2(h, 0), x);
+                assert_eq!(deinterleave2(h, 1), y);
+            }
+        }
+    }
+
+    #[test]
+    fn test_interleave3() {
+        for x in 0..(25 + 1) {
+            for y in 0..(25 + 1) {
+                for z in 0..(25 + 1) {
+                    let h = interleave3(x, y, z);
+                    assert_eq!(deinterleave3(h, 0), x);
+                    assert_eq!(deinterleave3(h, 1), y);
+                    assert_eq!(deinterleave3(h, 2), z);
+                }
             }
         }
     }
 }
+
+
+
